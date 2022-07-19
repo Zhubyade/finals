@@ -15,6 +15,17 @@ app.logger.setLevel(logging.DEBUG)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'super secret key'
 
+def getToken(token: str):
+    """
+    Get token function retieves user token and verifies if the user is allowed to use the service.
+    """
+    tokens = open('useraccess.txt', 'r').read().split('\n')
+
+    if token in tokens:
+        return True
+    return False
+
+
 def allowed_file(filename: str) -> bool:
     """Checks if file is of an allowed extension.
     """
@@ -112,6 +123,58 @@ def download_txt(name: str):
         session['encrypted'],
         mimetype='text/plain',
         headers={'Content-disposition': f'attachment; filename={name}.txt'})
+
+@app.route('/api/v1/encrypt/<text>/<key>/<token>', methods=["GET"])
+def encrypt_api(text: str, key: str, token: str):
+    
+    if getToken(token):
+        if request.method == "GET":
+        
+            text_plain: str = text
+
+            if key:
+                encryption_key: str = key
+            else:
+                encryption_key: str = "hello"
+
+            encryption = AESCipher(encryption_key)
+            encrypted_text: str = encryption.encrypt(text_plain)
+            session['encrypted'] = encrypted_text
+
+        return {"Encrypted text": encrypted_text}
+    else:
+        return {"Error": "Please provide a valid access token"}
+
+@app.route('/api/v1/decrypt/<text>/<key>/<token>', methods=["GET"])
+def decrypt_api(text: str, key: str, token: str):
+    
+    message: dict = {
+        "type": str,
+        "body": str
+    }
+
+    if getToken(token):
+        if request.method == "GET":
+            text_plain: str = text
+
+            if key:
+                decryption_key: str = key
+            else:
+                decryption_key: str = "hello"
+            try:
+                decryption = AESCipher(decryption_key)
+                decrypted_text: str | None = decryption.decrypt(text_plain)
+                message["type"] = "success"
+                message["body"] = "Decrypted Successfully!"
+            except Exception:
+                message["type"] = "danger"
+                message["body"] = "Please Enter a valid decryption key!"
+                decrypted_text = None
+        return {"decrypted text": decrypted_text, "message": message}
+
+    else:
+        return {"Error": "Please provide a valid access token"}
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
