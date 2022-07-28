@@ -241,10 +241,7 @@ def sign_up():
     
     app.logger.info("Encrypt Page, With Encryption")
 
-    message: dict = {
-        "type": str,
-        "body": str
-    }
+    message: dict = {}
 
     if request.method == "POST":
         data = request.form
@@ -277,10 +274,7 @@ def login():
     
     app.logger.info("Encrypt Page, With Encryption")
 
-    message: dict = {
-        "type": str,
-        "body": str
-    }
+    message: dict = {}
 
     if request.method == "POST":
         data = request.form
